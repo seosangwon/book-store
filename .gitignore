@@ -39,3 +39,7 @@ out/
 
 ## serecet.yml ##
 application-secret.yml
+
+### dev DB ###
+book_store.mv.db
+book_store.trace.db

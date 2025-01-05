@@ -5,9 +5,9 @@ spring:
     multipart:
       max-file-size: 5MB
   datasource:
-    url: jdbc:mysql://localhost:3306/book_store_prod
-    username: admin
-    password: 1234
+    url: ${spring.database_prod.url}
+    username: ${spring.database_prod.username}
+    password: ${spring.database_prod.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
