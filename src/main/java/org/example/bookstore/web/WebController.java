@@ -8,7 +8,7 @@ public class WebController {
 
     @GetMapping("/")
     public String index() {
-        return "Hello World2";
+        return "Hello World3";
     }
 
 }
