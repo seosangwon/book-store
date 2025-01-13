@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: ''
+          distribution: 'temurin'
 
       # 3) 빌드 (예: Gradle 사용, dev 프로필)
       - name: Build Jar
