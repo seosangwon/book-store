@@ -65,7 +65,7 @@ jobs:
               docker rm bookstore-app || true;
               docker run -d --name bookstore-app \
                 -p 8080:8080 \
-                -e SPRING_PROFILES_ACTIVE=prod \
+                -e SPRING_PROFILES_ACTIVE=dev \
                 -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/book_store \
                 -e SPRING_DATASOURCE_USERNAME=admin \
                 -e SPRING_DATASOURCE_PASSWORD=1234 \
