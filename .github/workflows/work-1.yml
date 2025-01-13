@@ -67,8 +67,8 @@ jobs:
                 -p 8080:8080 \
                 -e SPRING_PROFILES_ACTIVE=dev \
                 -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/book_store \
-                -e SPRING_DATASOURCE_USERNAME=admin \
-                -e SPRING_DATASOURCE_PASSWORD=1234 \
+                -e SPRING_DATASOURCE_USERNAME=sa \
+                -e SPRING_DATASOURCE_PASSWORD= \
                 $IMAGE_NAME
             " \
             --timeout-seconds 600 \
