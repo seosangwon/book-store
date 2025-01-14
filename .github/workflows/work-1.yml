@@ -9,7 +9,7 @@ on:
       - 'readme.md'
       - 'infraScript/**'
     branches:
-      - 'main'
+      - 'main','develop'
 jobs:
   makeTagAndRelease:
     runs-on: ubuntu-latest
