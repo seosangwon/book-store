@@ -55,33 +55,22 @@ jobs:
       - name: Deploy via SSM with Enhanced Debugging
         run: |
           IMAGE_NAME="ghcr.io/${{ secrets.GHCR_USERNAME }}/my-bookstore:develop-latest"
-          
-          COMMANDS="
-          echo 'Checking Docker installation...';
-          docker --version;
-          echo 'Docker info:';
-          docker info;
-          echo 'Listing Docker images:';
-          docker images;
-          echo 'Logging into ghcr.io...';
-          echo '${{ secrets.GHCR_TOKEN }}' | docker login ghcr.io -u '${{ secrets.GHCR_USERNAME }}' --password-stdin;
-          echo 'Pulling Docker image...';
-          docker pull $IMAGE_NAME;
-          echo 'Stopping existing container (if any)...';
-          docker stop bookstore-app || true;
-          echo 'Removing existing container (if any)...';
-          docker rm bookstore-app || true;
-          echo 'Running Docker container...';
-          docker run -d --name bookstore-app \
-            -p 8080:8080 \
-            -e SPRING_PROFILES_ACTIVE=dev \
-            $IMAGE_NAME;
-          echo 'Listing running containers:';
-          docker ps -a;
-          echo 'Listing test directory contents:';
-          ls -la /usr/bin/test/ci
-          "
-          
+
+          COMMANDS='[
+            "echo \"Checking Docker installation...\"",
+            "docker --version",
+            "docker info",
+            "docker images",
+            "echo \"Logging into ghcr.io...\"",
+            "echo \"${{ secrets.GHCR_TOKEN }}\" | docker login ghcr.io -u \"${{ secrets.GHCR_USERNAME }}\" --password-stdin",
+            "docker pull $IMAGE_NAME",
+            "docker stop bookstore-app || true",
+            "docker rm bookstore-app || true",
+            "docker run -d --name bookstore-app -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev $IMAGE_NAME",
+            "docker ps -a",
+            "ls -la /usr/bin/test/ci"
+          ]'
+
           RESPONSE=$(aws ssm send-command \
             --instance-ids "${{ secrets.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
@@ -91,12 +80,12 @@ jobs:
             --max-concurrency "1" \
             --max-errors "0" \
             --output json)
-          
+
           echo "SSM Command Response: $RESPONSE"
-          
+
           COMMAND_ID=$(echo "$RESPONSE" | jq -r '.Command.CommandId')
           echo "Command ID: $COMMAND_ID"
-          
+
           # 명령어 실행 상태 확인
           STATUS=""
           while [[ "$STATUS" != "Success" && "$STATUS" != "Failed" && "$STATUS" != "Cancelled" && "$STATUS" != "TimedOut" ]]; do
@@ -108,23 +97,23 @@ jobs:
             echo "Current Status: $STATUS"
             sleep 5
           done
-          
+
           # 명령어 출력 확인
           OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ secrets.INSTANCE_ID }}" \
             --query 'StandardOutputContent' \
             --output text)
-          
+
           ERROR_OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ secrets.INSTANCE_ID }}" \
             --query 'StandardErrorContent' \
             --output text)
-          
+
           echo "Command Output: $OUTPUT"
           echo "Error Output: $ERROR_OUTPUT"
-          
+
           # 상태가 실패인 경우 워크플로우 실패 처리
           if [[ "$STATUS" != "Success" ]]; then
             echo "SSM Command failed with status: $STATUS"
