@@ -52,47 +52,38 @@ jobs:
           aws configure set default.region "${{ secrets.AWS_DEFAULT_REGION }}"
 
       # 7) SSM으로 EC2에서 Docker 명령 실행
-      - name: Deploy via SSM
+      - name: Deploy via SSM with Debugging
         run: |
           IMAGE_NAME="ghcr.io/${{ secrets.GHCR_USERNAME }}/my-bookstore:develop-latest"
 
-          aws ssm send-command \
-            --instance-ids "${{ secrets.INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy new Docker image" \
-            --parameters commands="
-              docker pull $IMAGE_NAME;
-              mkdir -p ~/usr/bin/test/ci && touch ~/usr/bin/test/ci/cd.txt;
-              docker stop bookstore-app || true;
-              docker rm bookstore-app || true;
-              docker run -d --name bookstore-app \
-                -p 8080:8080 \
-                -e SPRING_PROFILES_ACTIVE=dev \
-                $IMAGE_NAME
-            " \
-            --timeout-seconds 600 \
-            --max-concurrency "1" \
-            --max-errors "0"
+          COMMANDS="docker pull $IMAGE_NAME;
+          docker info;
+          docker images;
+          mkdir -p /home/ubuntu/usr/bin/test/ci && touch /home/ubuntu/usr/bin/test/ci/cd.txt;
+          docker stop bookstore-app || true;
+          docker rm bookstore-app || true;
+          docker run -d --name bookstore-app \
+            -p 8080:8080 \
+            -e SPRING_PROFILES_ACTIVE=dev \
+            $IMAGE_NAME;
+          docker ps -a;
+          ls -la /home/ubuntu/usr/bin/test/ci"
 
-      - name: Test SSM Command with Absolute Path
-        run: |
-          COMMANDS="mkdir -p /usr/bin/test-dir && touch /usr/bin/test-dir/test-file.txt && ls -la /usr/bin/test-dir"
-          
           RESPONSE=$(aws ssm send-command \
             --instance-ids "${{ secrets.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --comment "Test SSM Command with Absolute Path" \
+            --comment "Deploy new Docker image with Debugging" \
             --parameters commands="$COMMANDS" \
             --timeout-seconds 600 \
             --max-concurrency "1" \
             --max-errors "0" \
             --output json)
-          
+
           echo "SSM Command Response: $RESPONSE"
-          
+
           COMMAND_ID=$(echo "$RESPONSE" | jq -r '.Command.CommandId')
           echo "Command ID: $COMMAND_ID"
-          
+
           # 명령어 실행 상태 확인
           STATUS=""
           while [[ "$STATUS" != "Success" && "$STATUS" != "Failed" && "$STATUS" != "Cancelled" && "$STATUS" != "TimedOut" ]]; do
@@ -104,23 +95,23 @@ jobs:
             echo "Current Status: $STATUS"
             sleep 5
           done
-          
+
           # 명령어 출력 확인
           OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ secrets.INSTANCE_ID }}" \
             --query 'StandardOutputContent' \
             --output text)
-          
+
           ERROR_OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ secrets.INSTANCE_ID }}" \
             --query 'StandardErrorContent' \
             --output text)
-          
+
           echo "Command Output: $OUTPUT"
           echo "Error Output: $ERROR_OUTPUT"
-          
+
           # 상태가 실패인 경우 워크플로우 실패 처리
           if [[ "$STATUS" != "Success" ]]; then
             echo "SSM Command failed with status: $STATUS"
@@ -131,3 +122,4 @@ jobs:
           JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.13-11/x64
           JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.13-11/x64
 
+     
