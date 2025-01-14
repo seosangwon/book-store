@@ -76,7 +76,7 @@ jobs:
 
       - name: Test SSM Command with Absolute Path
         run: |
-          COMMANDS="mkdir -p /usr/bin/test-dir && touch /usr/bin/test-dir/test-file.txt && ls -la /home/ubuntu/test-dir"
+          COMMANDS="mkdir -p /usr/bin/test-dir && touch /usr/bin/test-dir/test-file.txt && ls -la /usr/bin/test-dir"
           
           RESPONSE=$(aws ssm send-command \
             --instance-ids "${{ secrets.INSTANCE_ID }}" \
