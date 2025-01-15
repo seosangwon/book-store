@@ -82,8 +82,8 @@ jobs:
           comment: Deploy
           command: |
             # 기존에 실행된 컨테이너 제거
-            docker stop book-store || true
-            docker rm book-store  || true
+            docker stop book-store 
+            docker rm book-store  
 
             # 새 도커 이미지 PULL
             docker pull ghcr.io/seosangwon/book-store
